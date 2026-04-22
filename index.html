@@ -1,252 +1,817 @@
 <!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
-        <link rel="stylesheet" href="css/qgis2web.css">
-        <link rel="stylesheet" href="css/fontawesome-all.min.css">
-        <link rel="stylesheet" href="css/leaflet.photon.css">
-        <style>
-        html, body, #map {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            margin: 0;
-        }
-        </style>
-        <title></title>
-    </head>
-    <body>
-        <div id="map">
-        </div>
-        <script src="js/qgis2web_expressions.js"></script>
-        <script src="js/leaflet.js"></script>
-        <script src="js/L.Control.Layers.Tree.min.js"></script>
-        <script src="js/leaflet.rotatedMarker.js"></script>
-        <script src="js/leaflet.pattern.js"></script>
-        <script src="js/leaflet-hash.js"></script>
-        <script src="js/Autolinker.min.js"></script>
-        <script src="js/rbush.min.js"></script>
-        <script src="js/labelgun.min.js"></script>
-        <script src="js/labels.js"></script>
-        <script src="js/leaflet.photon.js"></script>
-        <script src="data/minimarket_unsrat_3.js"></script>
-        <script>
-        var map = L.map('map', {
-            zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[1.4527453021936068,124.8209419929441],[1.4600588483999695,124.83173608222457]]);
-        var hash = new L.Hash(map);
-        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
-        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
-        // remove popup's row if "visible-with-data"
-        function removeEmptyRowsFromPopupContent(content, feature) {
-         var tempDiv = document.createElement('div');
-         tempDiv.innerHTML = content;
-         var rows = tempDiv.querySelectorAll('tr');
-         for (var i = 0; i < rows.length; i++) {
-             var td = rows[i].querySelector('td.visible-with-data');
-             var key = td ? td.id : '';
-             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
-                 rows[i].parentNode.removeChild(rows[i]);
-             }
-         }
-         return tempDiv.innerHTML;
-        }
-        // modify popup if contains media
-        function addClassToPopupIfMedia(content, popup) {
-            var tempDiv = document.createElement('div');
-            tempDiv.innerHTML = content;
-            var imgTd = tempDiv.querySelector('td img');
-            if (imgTd) {
-                var src = imgTd.getAttribute('src');
-                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
-                    popup._contentNode.classList.add('media');
-                    setTimeout(function() {
-                        popup.update();
-                    }, 10);
-                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
-                    var audio = document.createElement('audio');
-                    audio.controls = true;
-                    audio.src = src;
-                    imgTd.parentNode.replaceChild(audio, imgTd);
-                    popup._contentNode.classList.add('media');
-                    setTimeout(function() {
-                        popup.setContent(tempDiv.innerHTML);
-                        popup.update();
-                    }, 10);
-                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
-                    var video = document.createElement('video');
-                    video.controls = true;
-                    video.src = src;
-                    video.style.width = "400px";
-                    video.style.height = "300px";
-                    video.style.maxHeight = "60vh";
-                    video.style.maxWidth = "60vw";
-                    imgTd.parentNode.replaceChild(video, imgTd);
-                    popup._contentNode.classList.add('media');
-                    // Aggiorna il popup quando il video carica i metadati
-                    video.addEventListener('loadedmetadata', function() {
-                        popup.update();
-                    });
-                    setTimeout(function() {
-                        popup.setContent(tempDiv.innerHTML);
-                        popup.update();
-                    }, 10);
-                } else {
-                    popup._contentNode.classList.remove('media');
-                }
-            } else {
-                popup._contentNode.classList.remove('media');
-            }
-        }
-        var zoomControl = L.control.zoom({
-            position: 'topleft'
-        }).addTo(map);
-        var bounds_group = new L.featureGroup([]);
-        function setBounds() {
-        }
-        map.createPane('pane_GoogleSatellite_0');
-        map.getPane('pane_GoogleSatellite_0').style.zIndex = 400;
-        var layer_GoogleSatellite_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            pane: 'pane_GoogleSatellite_0',
-            opacity: 1.0,
-            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 20
-        });
-        layer_GoogleSatellite_0;
-        map.addLayer(layer_GoogleSatellite_0);
-        map.createPane('pane_GoogleSatellite_1');
-        map.getPane('pane_GoogleSatellite_1').style.zIndex = 401;
-        var layer_GoogleSatellite_1 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            pane: 'pane_GoogleSatellite_1',
-            opacity: 1.0,
-            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 20
-        });
-        layer_GoogleSatellite_1;
-        map.addLayer(layer_GoogleSatellite_1);
-        map.createPane('pane_OpenStreetMap_2');
-        map.getPane('pane_OpenStreetMap_2').style.zIndex = 402;
-        var layer_OpenStreetMap_2 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            pane: 'pane_OpenStreetMap_2',
-            opacity: 1.0,
-            attribution: '',
-            minZoom: 1,
-            maxZoom: 28,
-            minNativeZoom: 0,
-            maxNativeZoom: 19
-        });
-        layer_OpenStreetMap_2;
-        map.addLayer(layer_OpenStreetMap_2);
-        function pop_minimarket_unsrat_3(feature, layer) {
-            var popupContent = '<table>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['nama'] !== null ? autolinker.link(String(feature.properties['nama']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['jenis'] !== null ? autolinker.link(String(feature.properties['jenis']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['alamat'] !== null ? autolinker.link(String(feature.properties['alamat']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['latitude'] !== null ? autolinker.link(String(feature.properties['latitude']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                    <tr>\
-                        <td colspan="2">' + (feature.properties['longitude'] !== null ? autolinker.link(String(feature.properties['longitude']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
-            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
-			layer.on('popupopen', function(e) {
-				addClassToPopupIfMedia(content, e.popup);
-			});
-			layer.bindPopup(content, { maxHeight: 400 });
-        }
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-        function style_minimarket_unsrat_3_0(feature) {
-            switch(String(feature.properties['jenis'])) {
-                case 'Alfamart':
-                    return {
-                pane: 'pane_minimarket_unsrat_3',
-                radius: 8.0,
-                opacity: 1,
-                color: 'rgba(83,83,83,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(37,233,69,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'Alfamidi':
-                    return {
-                pane: 'pane_minimarket_unsrat_3',
-                radius: 8.0,
-                opacity: 1,
-                color: 'rgba(83,83,83,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(211,61,31,1.0)',
-                interactive: true,
-            }
-                    break;
-                default:
-                    return {
-                pane: 'pane_minimarket_unsrat_3',
-                radius: 8.0,
-                opacity: 1,
-                color: 'rgba(83,83,83,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 2.0,
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(64,28,228,1.0)',
-                interactive: true,
-            }
-                    break;
-            }
+<link rel="stylesheet" href="css/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --pink: #ff1493;
+    --pink-dark: #c0006e;
+    --pink-light: #ff69b4;
+    --navy: #1f4e79;
+    --blue: #4a90e2;
+    --white: #ffffff;
+    --bg: #f4f6f9;
+}
+
+html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+/* ========== SPLASH SCREEN ========== */
+#splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, #1f4e79 0%, #0a2540 40%, #1a0030 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+#splash.hide {
+    opacity: 0;
+    transform: scale(1.04);
+    pointer-events: none;
+}
+
+.splash-bg-decor {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.splash-bg-decor::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,20,147,0.18) 0%, transparent 70%);
+    top: -150px; right: -150px;
+}
+
+.splash-bg-decor::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(74,144,226,0.15) 0%, transparent 70%);
+    bottom: -100px; left: -100px;
+}
+
+.splash-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 0 24px;
+}
+
+.splash-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+    animation: floatIcon 3s ease-in-out infinite;
+    display: block;
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.splash-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 5vw, 42px);
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+}
+
+.splash-title span {
+    color: var(--pink-light);
+}
+
+.splash-subtitle {
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    font-weight: 300;
+}
+
+.splash-divider {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--pink), transparent);
+    margin: 0 auto 40px;
+}
+
+.splash-cards {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.splash-card {
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 32px 36px;
+    width: 180px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.splash-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,20,147,0.2), rgba(74,144,226,0.1));
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.splash-card:hover {
+    transform: translateY(-8px) scale(1.04);
+    border-color: var(--pink-light);
+    box-shadow: 0 20px 50px rgba(255,20,147,0.35);
+}
+
+.splash-card:hover::before { opacity: 1; }
+.splash-card:active { transform: scale(0.97); }
+
+.card-icon {
+    font-size: 40px;
+    margin-bottom: 14px;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+.card-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+.card-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 6px;
+    display: block;
+    position: relative;
+    z-index: 1;
+    letter-spacing: 0.5px;
+}
+
+.splash-footer {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 2;
+}
+
+.splash-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.splash-nim {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 2px;
+    margin-top: 2px;
+}
+
+/* ========== MAP VIEW ========== */
+#map-view {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+}
+
+#map-view.active { display: flex; }
+
+#map {
+    flex: 1;
+    width: 100%;
+}
+
+/* ========== DATA VIEW ========== */
+#data-view {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    background: var(--bg);
+    overflow-y: auto;
+}
+
+#data-view.active { display: flex; }
+
+/* ========== SHARED NAV BAR ========== */
+.topbar {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 8px 16px;
+    border-radius: 50px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--pink);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.back-btn {
+    background: var(--pink);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 5px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.back-btn:hover { background: var(--pink-dark); }
+
+/* ========== DATA PAGE ========== */
+.data-topbar {
+    background: linear-gradient(135deg, var(--navy), #0a2540);
+    padding: 20px 24px 16px;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.data-topbar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.data-topbar .back-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.data-body {
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Info Card */
+.info-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border-left: 5px solid var(--pink);
+    animation: fadeUp 0.5s ease both;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.info-card:nth-child(2) { animation-delay: 0.1s; }
+.info-card:nth-child(3) { animation-delay: 0.2s; }
+
+.info-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.stat-item {
+    background: linear-gradient(135deg, #f8f9ff, #fff0f8);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    border: 1.5px solid rgba(255,20,147,0.12);
+}
+
+.stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--pink);
+    display: block;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Table */
+.kelurahan-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.kelurahan-table th {
+    background: linear-gradient(135deg, var(--navy), #1a3a5c);
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.kelurahan-table th:first-child { border-radius: 10px 0 0 0; }
+.kelurahan-table th:last-child { border-radius: 0 10px 0 0; }
+
+.kelurahan-table td {
+    padding: 11px 16px;
+    font-size: 13px;
+    color: #444;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.kelurahan-table tr:nth-child(even) td { background: #fafbff; }
+.kelurahan-table tr:hover td { background: #fff0f8; }
+
+.kelurahan-table td:first-child {
+    font-weight: 600;
+    color: var(--navy);
+}
+
+.badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--pink-light), var(--pink));
+    color: white;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Identity Card */
+.identity-card {
+    background: linear-gradient(135deg, var(--navy) 0%, #0f2d4a 100%);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(31,78,121,0.4);
+    animation: fadeUp 0.5s ease 0.3s both;
+}
+
+.identity-card::before {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,20,147,0.15);
+    top: -60px; right: -60px;
+}
+
+.identity-card::after {
+    content: '🎓';
+    position: absolute;
+    font-size: 80px;
+    right: 20px;
+    bottom: -10px;
+    opacity: 0.15;
+}
+
+.identity-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--pink-light);
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+}
+
+.identity-nim {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
+}
+
+.identity-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ========== MAP HEADER (ASLI QGIS) ========== */
+.header {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    z-index: 1000;
+    font-weight: bold;
+    color: #ff1493;
+    white-space: nowrap;
+}
+
+/* ========== LABEL (ASLI QGIS) ========== */
+.custom-label {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 16px;
+    border: 2px solid #ff1493;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.label-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: #ff1493;
+}
+
+/* ========== LEGEND (ASLI QGIS) ========== */
+.legend {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    font-size: 13px;
+    z-index: 1000;
+}
+
+/* ========== ANIMASI TITIK (ASLI QGIS) ========== */
+.pulse {
+    width: 20px;
+    height: 20px;
+    background: rgba(255,0,0,0.4);
+    border-radius: 50%;
+    position: absolute;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.7; }
+    70% { transform: scale(2.5); opacity: 0; }
+    100% { opacity: 0; }
+}
+</style>
+
+<title>Peta Kecamatan Soreang</title>
+</head>
+
+<body>
+
+<!-- ========== SPLASH SCREEN ========== -->
+<div id="splash">
+    <div class="splash-bg-decor"></div>
+    <div class="splash-content">
+        <span class="splash-icon">🗺️</span>
+        <div class="splash-title">Kecamatan <span>Soreang</span></div>
+        <div class="splash-subtitle">Kota Parepare · Sulawesi Selatan</div>
+        <div class="splash-divider"></div>
+        <div class="splash-cards">
+            <div class="splash-card" onclick="showMap()">
+                <span class="card-icon">🗺️</span>
+                <span class="card-label">Peta</span>
+                <span class="card-desc">Peta Interaktif</span>
+            </div>
+            <div class="splash-card" onclick="showData()">
+                <span class="card-icon">📊</span>
+                <span class="card-label">Data</span>
+                <span class="card-desc">Info & Kelurahan</span>
+            </div>
+        </div>
+    </div>
+    <div class="splash-footer">
+        <div class="splash-name">Felisitas Maranatha Virginia Kabelen</div>
+        <div class="splash-nim">NIM · 241011060032</div>
+    </div>
+</div>
+
+<!-- ========== MAP VIEW (ASLI QGIS) ========== -->
+<div id="map-view">
+    <div class="header">
+        📍 Peta Interaktif Kecamatan Soreang
+        <button class="back-btn" onclick="goBack()" style="margin-left:12px;">← Kembali</button>
+    </div>
+    <div id="map"></div>
+    <div class="legend">
+        <b>Keterangan:</b><br>
+        🔵 Wilayah Kecamatan<br>
+        🔴 Titik Kelurahan
+    </div>
+</div>
+
+<!-- ========== DATA VIEW ========== -->
+<div id="data-view">
+    <div class="data-topbar">
+        <span>📊</span>
+        <span class="data-topbar-title">Data Kecamatan Soreang</span>
+        <button class="back-btn" onclick="goBack()">← Kembali</button>
+    </div>
+    <div class="data-body">
+
+        <!-- Identitas Mahasiswa -->
+        <div class="identity-card">
+            <div class="identity-label">Dibuat Oleh</div>
+            <div class="identity-name">Felisitas Maranatha Virginia Kabelen</div>
+            <div class="identity-nim">NIM: 241011060032</div>
+        </div>
+
+        <!-- Deskripsi -->
+        <div class="info-card">
+            <div class="info-card-title">📌 Tentang Kecamatan Soreang</div>
+            <p style="font-size:14px;color:#555;line-height:1.8;margin-bottom:16px;">
+                Kecamatan Soreang adalah salah satu kecamatan di <strong style="color:var(--navy)">Kota Parepare</strong>, 
+                <strong style="color:var(--navy)">Sulawesi Selatan</strong>. Kecamatan ini terdiri dari 
+                <strong style="color:var(--pink)">7 kelurahan</strong> dengan total luas wilayah 
+                <strong style="color:var(--pink)">8,33 km²</strong>.
+            </p>
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <span class="stat-value">7</span>
+                    <span class="stat-label">Kelurahan</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">8,33</span>
+                    <span class="stat-label">Luas (km²)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">Parepare</span>
+                    <span class="stat-label">Kota</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">Sul-Sel</span>
+                    <span class="stat-label">Provinsi</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabel Kelurahan -->
+        <div class="info-card">
+            <div class="info-card-title">🏘️ Daftar Kelurahan</div>
+            <table class="kelurahan-table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Kelurahan</th>
+                        <th>Luas (km²)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>Bukit Harapan</td><td>5,56</td><td><span class="badge">Kelurahan</span></td></tr>
+                    <tr><td>2</td><td>Kampung Pisang</td><td>0,12</td><td><span class="badge">Kelurahan</span></td></tr>
+                    <tr><td>3</td><td>Ujung Baru</td><td>0,48</td><td><span class="badge">Kelurahan</span></td></tr>
+                    <tr><td>4</td><td>Lakessi</td><td>0,15</td><td><span class="badge">Kelurahan</span></td></tr>
+                    <tr><td>5</td><td>Ujung Lare</td><td>0,18</td><td><span class="badge">Kelurahan</span></td></tr>
+                    <tr><td>6</td><td>Watang Soreang</td><td>0,65</td><td><span class="badge">Kelurahan</span></td></tr>
+                    <tr><td>7</td><td>Bukit Indah</td><td>1,19</td><td><span class="badge">Kelurahan</span></td></tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" style="font-weight:700;color:var(--navy);padding:12px 16px;">Total Luas Kecamatan</td>
+                        <td style="font-weight:700;color:var(--pink);padding:12px 16px;">8,33 km²</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========== SCRIPT LEAFLET (ASLI QGIS) ========== -->
+<script src="js/leaflet.js"></script>
+<script src="data/KECMATANSOREANG_1.js"></script>
+
+<script>
+// ========== NAVIGASI ==========
+function showMap() {
+    document.getElementById('splash').classList.add('hide');
+    setTimeout(() => {
+        document.getElementById('splash').style.display = 'none';
+        document.getElementById('map-view').classList.add('active');
+        initMap();
+    }, 700);
+}
+
+function showData() {
+    document.getElementById('splash').classList.add('hide');
+    setTimeout(() => {
+        document.getElementById('splash').style.display = 'none';
+        document.getElementById('data-view').classList.add('active');
+    }, 700);
+}
+
+function goBack() {
+    document.getElementById('map-view').classList.remove('active');
+    document.getElementById('data-view').classList.remove('active');
+    var splash = document.getElementById('splash');
+    splash.style.display = 'flex';
+    splash.classList.remove('hide');
+}
+
+// ========== INISIALISASI PETA (ASLI QGIS) ==========
+var mapInitialized = false;
+
+function initMap() {
+    if (mapInitialized) return;
+    mapInitialized = true;
+
+    var map = L.map('map', {
+        zoomControl: true
+    }).setView([-3.99, 119.65], 12);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    function styleNormal() {
+        return {
+            color: '#1f4e79',
+            weight: 2,
+            fillColor: '#4a90e2',
+            fillOpacity: 0.5
+        };
+    }
+
+    var highlightedLayer = null;
+
+    var geojson = L.geoJSON(json_KECMATANSOREANG_1, {
+        style: styleNormal,
+        onEachFeature: function(feature, layer) {
+            layer.bindPopup("<b>Kecamatan Soreang</b>");
+            layer.on({
+                mouseover: function(e) {
+                    var l = e.target;
+                    l.setStyle({
+                        fillColor: '#ff69b4',
+                        color: '#ff1493',
+                        weight: 4,
+                        fillOpacity: 0.7
+                    });
+                    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                        l.bringToFront();
+                    }
+                },
+                mouseout: function(e) {
+                    if (highlightedLayer !== e.target) {
+                        geojson.resetStyle(e.target);
+                    }
+                },
+                click: function(e) {
+                    map.fitBounds(e.target.getBounds(), { padding: [20, 20] });
+                    if (highlightedLayer && highlightedLayer !== e.target) {
+                        geojson.resetStyle(highlightedLayer);
+                    }
+                    highlightedLayer = e.target;
+                    e.target.setStyle({
+                        fillColor: '#ff1493',
+                        color: '#ff0000',
+                        weight: 5,
+                        fillOpacity: 0.8
+                    });
+                }
+            });
         }
-        map.createPane('pane_minimarket_unsrat_3');
-        map.getPane('pane_minimarket_unsrat_3').style.zIndex = 403;
-        map.getPane('pane_minimarket_unsrat_3').style['mix-blend-mode'] = 'normal';
-        var layer_minimarket_unsrat_3 = new L.geoJson(json_minimarket_unsrat_3, {
-            attribution: '',
-            interactive: true,
-            dataVar: 'json_minimarket_unsrat_3',
-            layerName: 'layer_minimarket_unsrat_3',
-            pane: 'pane_minimarket_unsrat_3',
-            onEachFeature: pop_minimarket_unsrat_3,
-            pointToLayer: function (feature, latlng) {
-                var context = {
-                    feature: feature,
-                    variables: {}
-                };
-                return L.circleMarker(latlng, style_minimarket_unsrat_3_0(feature));
-            },
-        });
-        bounds_group.addLayer(layer_minimarket_unsrat_3);
-        map.addLayer(layer_minimarket_unsrat_3);
-        setBounds();
-        </script>        
-    </body>
+    }).addTo(map);
+
+    var center = geojson.getBounds().getCenter();
+
+    var redMarker = L.circleMarker(center, {
+        radius: 10,
+        fillColor: "#ff0000",
+        color: "#ffffff",
+        weight: 2,
+        fillOpacity: 1
+    }).addTo(map);
+    redMarker.bindPopup("Kecamatan Soreang").openPopup();
+
+    var label = L.marker(center, {
+        icon: L.divIcon({
+            className: 'custom-label',
+            html: '<div class="label-title">📍 Kecamatan Soreang</div>'
+        })
+    }).addTo(map);
+
+    var pulseIcon = L.divIcon({
+        className: '',
+        html: '<div class="pulse"></div>',
+        iconSize: [20, 20]
+    });
+    L.marker(center, { icon: pulseIcon }).addTo(map);
+
+    // ========== TITIK KELURAHAN ==========
+    var kelurahan = [
+        { name: "Bukit Indah",     lat: -4.00231, lng: 119.63977 },
+        { name: "Kampung Pisang",  lat: -4.00572, lng: 119.62456 },
+        { name: "Ujung Baru",      lat: -4.00875, lng: 119.63325 },
+        { name: "Lakessi",         lat: -4.00336, lng: 119.62745 },
+        { name: "Ujung Lare",      lat: -4.00656, lng: 119.63180 },
+        { name: "Watang Soreang",  lat: -3.99355, lng: 119.63397 },
+        { name: "Bukit Harapan",   lat: -3.98978, lng: 119.64412 }
+    ];
+
+    kelurahan.forEach(function(k) {
+        L.circleMarker([k.lat, k.lng], {
+            radius: 7,
+            fillColor: "#ff1493",
+            color: "#ffffff",
+            weight: 2,
+            fillOpacity: 1
+        })
+        .bindPopup("<b>" + k.name + "</b>")
+        .addTo(map);
+
+        L.marker([k.lat, k.lng], {
+            icon: L.divIcon({
+                className: '',
+                html: '<div style="background:white;border:1.5px solid #ff1493;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;color:#1f4e79;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.2);">' + k.name + '</div>',
+                iconAnchor: [-10, 10]
+            })
+        }).addTo(map);
+    });
+
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+    map.fitBounds(geojson.getBounds());
+}
+</script>
+
+</body>
 </html>
